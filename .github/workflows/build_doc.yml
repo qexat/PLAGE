@@ -1,0 +1,12 @@
+on:
+  push:
+    branches:
+    - main
+  workflow_dispatch:
+
+jobs:
+  build_doc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3.0.10
