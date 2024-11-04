@@ -7,8 +7,8 @@ let empty : t = []
 
 (** [of_hypotheses hypotheses] produces a context from the [hypotheses]*)
 let of_hypotheses (hypotheses : Hypotheses.t) : t =
-  let rec of_hypotheses_aux (e : Hypotheses.t) (acc : t) : t =
-    match e with
+  let rec of_hypotheses_aux (hypotheses : Hypotheses.t) (acc : t) : t =
+    match hypotheses with
     | [] -> List.rev acc
     | head :: tail ->
       of_hypotheses_aux
