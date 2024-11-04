@@ -14,4 +14,5 @@ jobs:
         uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: 5
+      - run: opam install dune odoc sherlodoc
       - run: cd orion_prop_oriented && dune build @doc
