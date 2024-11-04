@@ -8,6 +8,8 @@ jobs:
   build_doc:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2      
       - name: Set up OCaml
         uses: ocaml/setup-ocaml@v3
         with:
