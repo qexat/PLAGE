@@ -1,0 +1,3 @@
+(library
+ (name orion_prop_oriented)
+ (modules variable proposition context environment hypotheses))

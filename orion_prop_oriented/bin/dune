@@ -1,0 +1,4 @@
+(executable
+ (public_name orion_prop_oriented)
+ (name main)
+ (libraries orion_prop_oriented))

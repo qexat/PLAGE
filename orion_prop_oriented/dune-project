@@ -1,0 +1,21 @@
+(lang dune 3.16)
+
+(name orion_prop_oriented)
+
+(generate_opam_files true)
+
+(source
+ (github qexat/PLAGE))
+
+(authors "Qexat")
+
+(license MIT)
+
+(package
+ (name orion_prop_oriented)
+ (synopsis "A proposition-oriented environment")
+ (description
+  "Language environment where every binding is tied to a proposition")
+ (depends ocaml dune))
+
+; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
