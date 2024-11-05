@@ -1,6 +1,6 @@
 (** Context function (Γ) bound to an environment.
     To avoid lookup overhead, it is implemented as a list instead. *)
-type t = Variable.t list
+type t = string list
 
 (** The empty context. *)
 let empty : t = []
@@ -14,7 +14,8 @@ let of_hypotheses (hypotheses : Hypotheses.t) : t =
       of_hypotheses_aux
         tail
         (match head with
-         | Proposition.Defined variable -> variable :: acc)
+         | Proposition.Defined (Term.TVar name) -> name :: acc
+         | _ -> acc)
   in
   of_hypotheses_aux hypotheses []
 ;;
@@ -25,9 +26,5 @@ let show (context : t) : string =
   ^
   match context with
   | [] -> "()"
-  | head :: tail ->
-    List.fold_left
-      (fun acc item -> acc ^ ", " ^ Variable.show item)
-      (Variable.show head)
-      tail
+  | _ -> String.concat ", " context
 ;;

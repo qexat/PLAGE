@@ -20,23 +20,29 @@ let create (hypotheses : Hypotheses.t) : t =
    [List.mem].*)
 (** [is_defined environment name] determines whether [name] is defined in [environment] *)
 let is_defined (environment : t) (name : string) : bool =
-  List.mem (Variable.Var name) environment.context
+  List.mem name environment.context
 ;;
 
 (** [define_variable environment name] defines a single variable [name] in the [environment] *)
 let define_variable (environment : t) (name : string) : t =
-  let variable = Variable.Var name in
+  let variable = Term.TVar name in
   let prop = Proposition.Defined variable in
   { hypotheses = environment.hypotheses @ [ prop ]
-  ; context = environment.context @ [ variable ]
+  ; context = environment.context @ [ name ]
   }
 ;;
 
-(** [define_variables environment names] defines each [names] in [environment] *)
+(** [define_variables environment names] defines each [names] in the [environment] *)
 let rec define_variables (environment : t) (names : string list) : t =
   match names with
   | [] -> environment
   | head :: tail -> define_variables (define_variable environment head) tail
+;;
+
+(** [add_type_constraint] adds the proposition [name] : [type_name] to the [environment] *)
+let add_type_constraint (environment : t) (name : string) (type_name : string) : t =
+  let prop = Proposition.TypeOf (Term.TVar name, Term.TVar type_name) in
+  { hypotheses = environment.hypotheses @ [ prop ]; context = environment.context }
 ;;
 
 (** [show environment] produces a printable view of the [environment] *)

@@ -7,9 +7,5 @@ let show (hypotheses : t) : string =
   ^
   match hypotheses with
   | [] -> "()"
-  | head :: tail ->
-    List.fold_left
-      (fun acc item -> acc ^ ", " ^ Proposition.show item)
-      (Proposition.show head)
-      tail
+  | _ -> String.concat ", " (List.map Proposition.show hypotheses)
 ;;

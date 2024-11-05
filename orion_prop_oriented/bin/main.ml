@@ -68,4 +68,5 @@
 open Orion_prop_oriented
 
 let env = Environment.define_variables Environment.empty [ "a"; "b" ]
+let env = Environment.add_type_constraint env "a" "b"
 let () = print_endline (Environment.show env)
