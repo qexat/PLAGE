@@ -67,10 +67,5 @@
 
 open Orion_prop_oriented
 
-let env =
-  match Environment.define_variables Environment.empty [ "a"; "b" ] with
-  | None -> failwith "how did we get here?"
-  | Some env -> env
-;;
-
+let env = Environment.define_variables Environment.empty [ "a"; "b" ]
 let () = print_endline (Environment.show env)

@@ -24,26 +24,19 @@ let is_defined (environment : t) (name : string) : bool =
 ;;
 
 (** [define_variable environment name] defines a single variable [name] in the [environment] *)
-let define_variable (environment : t) (name : string) : t option =
-  match is_defined environment name with
-  | true -> None
-  | false ->
-    let variable = Variable.Var name in
-    let prop = Proposition.Defined variable in
-    Some
-      { hypotheses = environment.hypotheses @ [ prop ]
-      ; context = environment.context @ [ variable ]
-      }
+let define_variable (environment : t) (name : string) : t =
+  let variable = Variable.Var name in
+  let prop = Proposition.Defined variable in
+  { hypotheses = environment.hypotheses @ [ prop ]
+  ; context = environment.context @ [ variable ]
+  }
 ;;
 
 (** [define_variables environment names] defines each [names] in [environment] *)
-let rec define_variables (environment : t) (names : string list) : t option =
+let rec define_variables (environment : t) (names : string list) : t =
   match names with
-  | [] -> Some environment
-  | head :: tail ->
-    (match define_variable environment head with
-     | None -> None
-     | Some environment -> define_variables environment tail)
+  | [] -> environment
+  | head :: tail -> define_variables (define_variable environment head) tail
 ;;
 
 (** [show environment] produces a printable view of the [environment] *)
