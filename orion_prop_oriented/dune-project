@@ -1,5 +1,7 @@
 (lang dune 3.16)
 
+(using coq 0.9)
+
 (name orion_prop_oriented)
 
 (generate_opam_files true)

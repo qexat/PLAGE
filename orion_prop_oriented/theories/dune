@@ -1,0 +1,3 @@
+(coq.theory
+ (name orion_theories)
+ (package orion_prop_oriented))
