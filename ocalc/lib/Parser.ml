@@ -68,7 +68,11 @@ let parse_binary (parser : t) (pred : t -> Ast.t option) (token_kinds : Token_ki
   =
   match pred parser with
   | None -> None
-  | Some left -> parse_binary_right_side parser left token_kinds
+  | Some left ->
+    let maybe_binary = parse_binary_right_side parser left token_kinds in
+    (match Option.is_some maybe_binary with
+     | false -> Some left
+     | true -> maybe_binary)
 ;;
 
 let parse_sum (parser : t) : Ast.t option =
