@@ -9,19 +9,23 @@ class lexer (source : string) =
     method peek ?(n : int = 0) () : char =
       match self#is_at_end ~n () with
       | true -> '\x00'
-      | false -> String.unsafe_get source n
+      | false -> String.unsafe_get source (current + n)
 
     method advance ?(steps : int = 1) () =
       match steps > 0 with
       | false -> failwith "advance: steps must be strictly positive"
-      | true -> current <- current + 1
+      | true -> current <- current + steps
 
     method consume () : char =
       let char = self#peek () in
       self#advance ();
       char
 
-    method get_lexeme () : string = String.sub source start (current - start)
+    method get_lexeme () : string =
+      if self#is_at_end ~n:(-1) ()
+      then "\x00"
+      else String.sub source start (current - start)
+
     method is_digit (char : char) : bool = '0' <= char && char <= '9'
 
     method scan_integer () : Token_kind.t =
@@ -47,11 +51,16 @@ class lexer (source : string) =
     method build_token (kind : Token_kind.t) : Token.t = kind, self#get_lexeme (), start
     method add_token (token : Token.t) = tokens <- token :: tokens
 
+    method add_eof () =
+      self#synchronize ();
+      self#advance ();
+      Token_kind.EOF |> self#build_token |> self#add_token
+
     method tokenize () : Token.t list =
       while not (self#is_at_end ()) do
         self#synchronize ();
         () |> self#scan_token |> self#build_token |> self#add_token
       done;
-      Token_kind.EOF |> self#build_token |> self#add_token;
+      self#add_eof ();
       List.rev tokens
   end

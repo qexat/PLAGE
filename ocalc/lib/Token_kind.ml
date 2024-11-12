@@ -8,9 +8,9 @@ type t =
 
 let show : t -> string = function
   | INTEGER -> "INTEGER"
-  | PLUS -> "PLUS (+)"
-  | MINUS -> "MINUS (-)"
-  | ASTERISK -> "ASTERISK (*)"
+  | PLUS -> "PLUS"
+  | MINUS -> "MINUS"
+  | ASTERISK -> "ASTERISK"
   | SLASH -> "SLASH (/)"
   | EOF -> "EOF"
 ;;

@@ -3,6 +3,7 @@ type t =
   ; mutable position : int
   }
 
+let create (tokens : Token.t list) : t = { tokens; position = 0 }
 let peek (parser : t) : Token.t = List.nth parser.tokens parser.position
 
 let is_at_end (parser : t) : bool =
