@@ -1,0 +1,17 @@
+(lang dune 3.16)
+
+(name ocalc)
+
+(generate_opam_files true)
+
+(source
+ (github qexat/PLAGE))
+
+(authors "Qexat")
+
+(license MIT)
+
+(package
+ (name ocalc)
+ (synopsis "Basic calculator language in OCaml")
+ (depends ocaml dune))

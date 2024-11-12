@@ -1,0 +1,4 @@
+(executable
+ (public_name ocalc)
+ (name main)
+ (libraries ocalc))
