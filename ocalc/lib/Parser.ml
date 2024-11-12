@@ -51,19 +51,24 @@ let parse_unary (parser : t) : Ast.t option =
       Option.map (fun atom -> Ast.UnaryOp (kind, atom)) (parse_atom parser))
 ;;
 
-let rec parse_binary
+let rec parse_binary_right_side
   (parser : t)
-  (pred : t -> Ast.t option)
+  (left : Ast.t)
   (token_kinds : Token_kind.t list)
+  : Ast.t option
+  =
+  Option.bind (expect_one_of parser token_kinds) (fun (kind, _, _) ->
+    Option.map
+      (fun right -> Ast.BinaryOp (kind, left, right))
+      (parse_binary_right_side parser left token_kinds))
+;;
+
+let parse_binary (parser : t) (pred : t -> Ast.t option) (token_kinds : Token_kind.t list)
   : Ast.t option
   =
   match pred parser with
   | None -> None
-  | Some left ->
-    Option.bind (expect_one_of parser token_kinds) (fun (kind, _, _) ->
-      Option.map
-        (fun right -> Ast.BinaryOp (kind, left, right))
-        (parse_binary parser pred token_kinds))
+  | Some left -> parse_binary_right_side parser left token_kinds
 ;;
 
 let parse_sum (parser : t) : Ast.t option =

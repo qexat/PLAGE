@@ -5,7 +5,9 @@ let parser = Ocalc.Parser.create tokens
 
 let ast =
   match Ocalc.Parser.parse parser with
-  | None -> failwith "failed parsing"
+  | None ->
+    Printf.printf "%d\n" parser.position;
+    failwith "failed parsing"
   | Some ast -> ast
 ;;
 
