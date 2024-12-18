@@ -1,6 +1,5 @@
 type name = string
 type value = int
-type type_var_id = int
 type meta_var_id = int
 
 type prim =
