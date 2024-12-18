@@ -10,10 +10,12 @@ let expr =
     }
 ;;
 
-let term = Elaboration.expr_to_term expr
-let () = Printf.printf "%s\n" (Core.typed_term_to_string term)
-let equations = Typing.generate_equations term
+let term = Elaboration.elaborate expr
+let () = Printf.printf "%s\n" (Core.TermFormatter.format term)
+let constraints = Typing.generate_constraints term
 
 let () =
-  equations |> List.map Typing.type_equation_to_string |> List.iter (Printf.printf "%s\n")
+  constraints
+  |> List.map Typing.Type_constraint.to_string
+  |> List.iter (Printf.printf "%s\n")
 ;;

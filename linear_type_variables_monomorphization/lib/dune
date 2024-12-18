@@ -1,3 +1,5 @@
 (library
  (name linear_type_variables_monomorphization)
  (flags -rectypes))
+
+(include_subdirs qualified)

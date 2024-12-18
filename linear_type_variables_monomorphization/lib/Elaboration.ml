@@ -1,28 +1,28 @@
 open Grammar
+open Core
 
-let meta_next_id = ref 0
-
-let make_fresh_meta () : Core.ty =
-  let id = !meta_next_id in
-  incr meta_next_id;
-  Core.Meta_var id
+let make_fresh_metavariable =
+  let generator = Id.get_generator () in
+  fun () -> Type.Metavariable (generator ())
 ;;
 
-let rec expr_to_term : Expr.t -> Core.term = function
-  | Expr.Identifier (_, lexeme, _) -> { ty = make_fresh_meta (); term' = Core.Var lexeme }
+let rec elaborate : Expr.t -> Term.t = function
+  | Expr.Identifier (_, lexeme, _) -> Term.var (make_fresh_metavariable ()) lexeme
   | Expr.Nat_literal (_, lexeme, _) ->
-    { ty = make_fresh_meta (); term' = Core.Lit (int_of_string lexeme) }
-  | Expr.Grouping expr -> expr_to_term expr
+    Core.Term.lit (make_fresh_metavariable ()) (Value.Nat (int_of_string lexeme))
+  | Expr.Grouping expr -> elaborate expr
   | Expr.Application { application; argument } ->
-    { ty = make_fresh_meta ()
-    ; term' = Core.App (expr_to_term application, expr_to_term argument)
-    }
+    Term.app (make_fresh_metavariable ()) (elaborate application) (elaborate argument)
   | Expr.Function_literal { parameter = _, lexeme, _; body } ->
-    { ty = make_fresh_meta ()
-    ; term' = Core.Fun (lexeme, make_fresh_meta (), expr_to_term body)
-    }
+    Term.fun'
+      (make_fresh_metavariable ())
+      lexeme
+      (make_fresh_metavariable ())
+      (elaborate body)
   | Expr.Let { name = _, lexeme, _; body } ->
-    { ty = make_fresh_meta ()
-    ; term' = Core.Let (lexeme, make_fresh_meta (), expr_to_term body)
-    }
+    Term.let'
+      (make_fresh_metavariable ())
+      lexeme
+      (make_fresh_metavariable ())
+      (elaborate body)
 ;;

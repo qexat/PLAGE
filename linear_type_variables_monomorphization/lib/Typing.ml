@@ -1,33 +1,38 @@
-type type_equation = Core.ty * Core.ty
+open Core
 
-let ( ==? ) (left : Core.ty) (right : Core.ty) : type_equation = left, right
-let ( --> ) (left : Core.ty) (right : Core.ty) : Core.ty = Core.Fun_type (left, right)
+module Type_constraint = struct
+  type t = Type.t * Type.t
 
-let rec generate_equations (term : Core.term) : type_equation list =
-  let open Core in
-  let { ty; term' } = term in
-  match term' with
-  (* term' := application argument
+  let to_string : t -> string = function
+    | left, right ->
+      Printf.sprintf "%s = %s" (TypeFormatter.format left) (TypeFormatter.format right)
+  ;;
+
+  module Notation = struct
+    let ( ==? ) (left : Type.t) (right : Type.t) : t = left, right
+  end
+end
+
+let rec generate_constraints ({ ty; term } : Term.t) : Type_constraint.t list =
+  let open Type.Notation in
+  let open Type_constraint.Notation in
+  match term with
+  (* term := application argument
     application : (type of argument) -> (type of term') *)
   | App (application, argument) ->
     (application.ty ==? argument.ty --> ty)
-    :: (generate_equations application @ generate_equations argument)
-  (* term' : parameter_type -> (type of body) *)
+    :: (generate_constraints application @ generate_constraints argument)
+  (* term : parameter_type -> (type of body) *)
   | Fun (parameter, parameter_type, body) ->
-    (ty ==? parameter_type --> body.ty) :: generate_equations body
-  (* term' := let name = body
-     term' : ()
-     name : type of body *)
+    (ty ==? parameter_type --> body.ty) :: generate_constraints body
+  (* term := let name = body
+    term : ()
+    name : type of body *)
   | Let (binding, binding_type, body) ->
-    (ty ==? Prim_type Unit_type) :: (binding_type ==? body.ty) :: generate_equations body
-  (* term' := value
-     term' : Nat *)
-  | Lit value -> [ ty ==? Prim_type Nat_type ]
-  (* term' := name *)
+    (ty ==? Type.unit) :: (binding_type ==? body.ty) :: generate_constraints body
+  (* term := value
+     term : Nat *)
+  | Lit value -> [ ty ==? Type.nat ]
+  (* term := name *)
   | Var name -> []
-;;
-
-let type_equation_to_string : type_equation -> string = function
-  | left, right ->
-    Printf.sprintf "%s = %s" (Core.ty_to_string left) (Core.ty_to_string right)
 ;;

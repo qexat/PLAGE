@@ -70,22 +70,15 @@ module Style = struct
 
   let none = { color = None; decorations = [] }
 
-  let decoration_list_to_ansi (decorations : Decoration.t list) : string =
-    decorations
-    |> List.map Decoration.to_int
-    |> List.map Int.to_string
-    |> String.concat ";"
-  ;;
-
   let to_ansi ({ color; decorations } : t) : string =
-    let color_ansi =
-      color
-      |> Option.map Color.to_ansi
-      |> Option.map (( ^ ) ";")
-      |> Option.value ~default:""
+    let color_ansi = color |> Option.map Color.to_ansi |> Option.value ~default:"" in
+    let decorations_ansi_list =
+      decorations |> List.map Decoration.to_int |> List.map Int.to_string
     in
-    let decorations_ansi = decoration_list_to_ansi decorations in
-    Printf.sprintf "\x1b[%sm" decorations_ansi ^ color_ansi
+    let ansi_list = color_ansi :: decorations_ansi_list in
+    Printf.sprintf
+      "\x1b[%sm"
+      (ansi_list |> List.find_all (fun s -> s <> "") |> String.concat ";")
   ;;
 end
 
@@ -116,13 +109,16 @@ module Token = struct
   end
 
   type t = Type.t * string
-  type highlighter = Type.t -> Style.t
 
-  let format (highlighter : highlighter) : t -> string = function
+  let space : t = Type.Space, " "
+
+  let format (highlighter : Type.t -> Style.t) : t -> string = function
     | token_type, lexeme ->
       Printf.sprintf "%s%s\x1b[0m" (Style.to_ansi (highlighter token_type)) lexeme
   ;;
 end
+
+type stylizer = Token.Type.t -> Style.t
 
 module type TOKENIZABLE = sig
   type t
@@ -130,56 +126,20 @@ module type TOKENIZABLE = sig
   val tokenize : t -> Token.t list
 end
 
-module Tree = struct
-  type t =
-    | Assignment of t * t
-    | Constant_literal of string
-    | Function_literal of t * t
-    | Identifier of string
-    | Parameter_name of string
-    | String_literal of string
-    | Type_annotated of t * string
+module MakeFormattable (M : TOKENIZABLE) = struct
+  include M
 
-  let rec tokenize : t -> Token.t list = function
-    | Assignment (name, body) ->
-      [ Token.Type.Keyword, "let"; Token.Type.Space, " " ]
-      @ tokenize name
-      @ [ Token.Type.Space, " "
-        ; Token.Type.Operator_statement, "="
-        ; Token.Type.Space, " "
-        ]
-      @ tokenize body
-    | Constant_literal lexeme -> [ Token.Type.Constant_literal, lexeme ]
-    | Function_literal (param, body) ->
-      [ Token.Type.Keyword, "fun"; Token.Type.Space, " " ]
-      @ tokenize param
-      @ [ Token.Type.Space, " "
-        ; Token.Type.Operator_statement, "->"
-        ; Token.Type.Space, " "
-        ]
-      @ tokenize body
-    | Identifier lexeme -> [ Token.Type.Identifier, lexeme ]
-    | Parameter_name lexeme -> [ Token.Type.Parameter, lexeme ]
-    | String_literal lexeme -> [ Token.Type.String, lexeme ]
-    | Type_annotated (expr, lexeme) ->
-      [ Token.Type.Strong_punctuation, "(" ]
-      @ tokenize expr
-      @ [ Token.Type.Space, " "
-        ; Token.Type.Strong_punctuation, ":"
-        ; Token.Type.Space, " "
-        ; Token.Type.Type, lexeme
-        ; Token.Type.Strong_punctuation, ")"
-        ]
+  let format ~(stylizer : stylizer) (term : t) : string =
+    term |> tokenize |> List.map (Token.format stylizer) |> String.concat ""
   ;;
 end
 
-type highlighter = Token.highlighter
-
-let default_highlighter : highlighter =
+let default_stylizer : stylizer =
   let open Token.Type in
   function
   | Comment | Documentation -> Style.create ~decorations:[ Decoration.Dim ] ()
-  | Keyword | Operator_statement | Operator_type -> Style.create ~color:Color.magenta ()
+  | Keyword -> Style.create ~color:Color.magenta ~decorations:[ Decoration.Bold ] ()
+  | Operator_statement | Operator_type -> Style.create ~color:Color.magenta ()
   | Identifier -> Style.create ~color:Color.cyan ()
   | Parameter -> Style.create ~color:Color.cyan ~decorations:[ Decoration.Italic ] ()
   | Constant | Constant_literal -> Style.create ~color:(Color.Rgb (153, 51, 204)) ()
@@ -190,16 +150,12 @@ let default_highlighter : highlighter =
   | _ -> Style.none
 ;;
 
-let highlight
+let format
       (type t)
-      ?(highlighter : highlighter = default_highlighter)
+      ?(stylizer : stylizer = default_stylizer)
       (tree : t)
       (module M : TOKENIZABLE with type t = t)
   : string
   =
-  tree |> M.tokenize |> List.map (Token.format highlighter) |> String.concat ""
-;;
-
-let highlight_tree ?(highlighter : highlighter = default_highlighter) (tree : Tree.t) =
-  highlight ~highlighter tree (module Tree)
+  tree |> M.tokenize |> List.map (Token.format stylizer) |> String.concat ""
 ;;
