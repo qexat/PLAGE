@@ -51,12 +51,12 @@ module Type = struct
     | Metavariable id -> Printf.sprintf "?%s" (Id.to_string id)
   ;;
 
-  let rec elaborate : t -> Format.Term.t = function
-    | Primitive_type prim -> Format.Term.Type_identifier (Primitive.to_string prim)
+  let rec elaborate : t -> Format.Fil.t = function
+    | Primitive_type prim -> Format.Fil.Type_identifier (Primitive.to_string prim)
     | Function_type (left, right) ->
-      Format.Term.Infix_stmt (elaborate left, "->", elaborate right)
+      Format.Fil.Infix_stmt (elaborate left, "->", elaborate right)
     | Metavariable id ->
-      Format.Term.Type_identifier (Printf.sprintf "?%s" (Id.to_string id))
+      Format.Fil.Type_identifier (Printf.sprintf "?%s" (Id.to_string id))
   ;;
 
   module Notation = struct
@@ -77,20 +77,20 @@ module Term = struct
 
     let elaborate
           ~(type_renderer : 'ty -> string)
-          ~(self_elaborator : 'self -> Format.Term.t)
-      : (_, 'self) t -> Format.Term.t
+          ~(self_elaborator : 'self -> Format.Fil.t)
+      : (_, 'self) t -> Format.Fil.t
       = function
       | App (application, argument) ->
-        Format.Term.Application (self_elaborator application, self_elaborator argument)
+        Format.Fil.Application (self_elaborator application, self_elaborator argument)
       | Fun (param, ty, body) ->
-        Format.Term.Function_literal
-          (Format.Term.Parameter (param, type_renderer ty), self_elaborator body)
+        Format.Fil.Function_literal
+          (Format.Fil.Parameter (param, type_renderer ty), self_elaborator body)
       | Let (name, ty, body) ->
-        Format.Term.Assignment
-          ( Format.Term.Type_annotated (Format.Term.Identifier name, type_renderer ty)
+        Format.Fil.Assignment
+          ( Format.Fil.Type_annotated (Format.Fil.Identifier name, type_renderer ty)
           , self_elaborator body )
-      | Lit value -> Format.Term.Constant_literal (Value.to_string value)
-      | Var name -> Format.Term.Identifier name
+      | Lit value -> Format.Fil.Constant_literal (Value.to_string value)
+      | Var name -> Format.Fil.Identifier name
     ;;
   end
 
@@ -114,8 +114,8 @@ module Term = struct
   let lit (ty : Type.t) (value : Value.t) : t = { ty; term = Untyped.Lit value }
   let var (ty : Type.t) (name : Name.t) : t = { ty; term = Untyped.Var name }
 
-  let rec elaborate ({ ty; term } : t) : Format.Term.t =
-    Format.Term.Type_annotated
+  let rec elaborate ({ ty; term } : t) : Format.Fil.t =
+    Format.Fil.Type_annotated
       ( Untyped.elaborate
           ~type_renderer:TypeFormatter.format
           ~self_elaborator:elaborate
