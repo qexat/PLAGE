@@ -1,0 +1,5 @@
+(executable
+ (public_name linear_type_variables_monomorphization)
+ (name main)
+ (libraries linear_type_variables_monomorphization)
+ (flags -rectypes))
